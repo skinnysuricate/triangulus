@@ -7,7 +7,8 @@
 
 class QSet<int>;
 class QPointF;
-class TriangleF;
+class Triangle;
+class LinkedTriangle;
 
 class Triangulator
 {
@@ -15,20 +16,45 @@ class Triangulator
 public:
 	Triangulator();
 
+	static QList<Triangle> triangulate(const QSet<QPointF> &points);
+	static QList<LinkedTriangle> triangulatePersistant(const QList<QPointF *> &persistant_points);
+
+private:
 	static bool analyseCircumcircle(const QPointF &p,
 									const QPointF &p1, const QPointF &p2, const QPointF &p3,
 									QPointF &pc, qreal &radius);
-	static QList<TriangleF> triangulate(const QSet<QPointF> &points);
 };
 
-class TriangleF
+class Triangle
 {
 public:
-	TriangleF() {}
-	TriangleF(const QPointF &p1, const QPointF &p2, const QPointF &p3);
+	Triangle() {}
+	Triangle(const QPointF &p1, const QPointF &p2, const QPointF &p3);
 	QPointF v1;
 	QPointF v2;
 	QPointF v3;
+};
+
+class LinkedTriangle
+{
+public:
+	LinkedTriangle() {}
+	LinkedTriangle(const QPointF *p1, const QPointF *p2, const QPointF *p3)
+		: v1(p1), v2(p2), v3(p3) {}
+	const QPointF *v1;
+	const QPointF *v2;
+	const QPointF *v3;
+};
+
+class LinkedEdge
+{
+public:
+	LinkedEdge() {}
+	LinkedEdge(const QPointF *p1, const QPointF *p2) : p1_(p1), p2_(p2) {}
+	const QPointF &p1() const { return *p1_; }
+	const QPointF &p2() const { return *p2_; }
+	const QPointF *p1_;
+	const QPointF *p2_;
 };
 
 inline uint qHash(const QPointF &key)
