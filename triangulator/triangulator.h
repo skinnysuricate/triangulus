@@ -5,7 +5,8 @@
 #include <QtCore/QPointF>
 #include <QtCore/QHash>
 
-class QSet<int>;
+template <class T>
+class QSet;
 class QPointF;
 class Triangle;
 class LinkedTriangle;

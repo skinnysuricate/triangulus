@@ -8,6 +8,7 @@
 #include <QtCore/QVariantAnimation>
 #include <QtCore/QtMath>
 #include <QtGui/QMouseEvent>
+#include <QtGui/QPaintEvent>
 
 AppWindow::AppWindow(QWidget *parent)
 	: QWidget(parent)
@@ -82,6 +83,7 @@ void AppWindow::reset()
 void AppWindow::paintEvent(QPaintEvent *e)
 {
 	QPainter p (this);
+	p.setClipRegion(e->region());
 	p.setRenderHint(QPainter::Antialiasing);
 	p.fillRect(rect(), QColor(40, 40, 40));
 
@@ -111,7 +113,7 @@ void AppWindow::paintEvent(QPaintEvent *e)
 	e->accept();
 }
 
-void AppWindow::mousePressEvent(QMouseEvent *e)
+void AppWindow::mousePressEvent(QMouseEvent */*e*/)
 {
 	reset();
 	e->accept();
