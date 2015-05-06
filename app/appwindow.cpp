@@ -64,7 +64,7 @@ void AppWindow::reset()
 		return true;
 	};
 
-	for (int i = 0; i < 150; ++i) {
+	for (int i = 0; i < 100; ++i) {
 		QPointF new_p (bound.width() * (qrand() % 1001 / 1000.), bound.height() * (qrand() % 1001 / 1000.));
 		if (!isSuitable(new_p)) {
 			--i;
@@ -95,7 +95,7 @@ void AppWindow::paintEvent(QPaintEvent *e)
 		p.setPen(p.brush().color());
 		if (idx == hovered_idx_) {
 			p.setBrush(polygon_colors_.at(idx).lighter(130));
-			p.setPen(QPen(p.brush().color().lighter(170), 2., Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+			p.setPen(QPen(p.brush().color().lighter(130), 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 		}
 		p.drawPolygon(poly);
 	};
