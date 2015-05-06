@@ -21,6 +21,7 @@ protected:
 	void paintEvent(QPaintEvent *e) override;
 	void mousePressEvent(QMouseEvent *e) override;
 	void mouseMoveEvent(QMouseEvent *e) override;
+	void resizeEvent(QResizeEvent *e) override;
 
 private:
 	void generateColors();

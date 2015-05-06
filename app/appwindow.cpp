@@ -110,10 +110,31 @@ void AppWindow::paintEvent(QPaintEvent *e)
 	if (hovered_idx_ >= 0)
 		drawPolygon(hovered_idx_);
 
+	qreal max = 1.;
+	qreal med = 0.;
+	for (const QPointF &delta: deltas_.values()) {
+		qreal m_length = delta.manhattanLength();
+		med += m_length;
+		if (m_length > max)
+			max = m_length;
+	}
+	med /= qreal(deltas_.size());
+	med = qMax(1., (max + med) * 0.8);
+
+	for (QPointF *point: points_) {
+		if (deltas_.contains(point)) {
+			const QPointF delta = deltas_.value(point);
+			p.setPen(Qt::NoPen);
+			p.setBrush(Qt::white);
+			p.setOpacity(delta.manhattanLength() / max);
+			p.drawEllipse(*point + delta, 1.5, 1.5);
+		}
+	}
+
 	e->accept();
 }
 
-void AppWindow::mousePressEvent(QMouseEvent */*e*/)
+void AppWindow::mousePressEvent(QMouseEvent *e)
 {
 	reset();
 	e->accept();
@@ -121,22 +142,28 @@ void AppWindow::mousePressEvent(QMouseEvent */*e*/)
 
 void AppWindow::mouseMoveEvent(QMouseEvent *e)
 {
-	QPointF cursor_pos = e->pos();
-	int idx = 0;
-	for (const LinkedTriangle &polygon: polygons_) {
-		QPolygonF poly;
-		poly << *polygon.v1
-			 << *polygon.v2
-			 << *polygon.v3;
-		if (poly.containsPoint(cursor_pos, Qt::OddEvenFill)) {
-			hovered_idx_ = idx;
-			break;
-		}
-		++idx;
-	}
+//	QPointF cursor_pos = e->pos();
+//	int idx = 0;
+//	for (const LinkedTriangle &polygon: polygons_) {
+//		QPolygonF poly;
+//		poly << *polygon.v1
+//			 << *polygon.v2
+//			 << *polygon.v3;
+//		if (poly.containsPoint(cursor_pos, Qt::OddEvenFill)) {
+//			hovered_idx_ = idx;
+//			break;
+//		}
+//		++idx;
+//	}
 	recountAntigravityForces(e->pos());
 	update();
 	e->accept();
+}
+
+void AppWindow::resizeEvent(QResizeEvent *e)
+{
+	QWidget::resizeEvent(e);
+//	reset();
 }
 
 void AppWindow::generateColors()
@@ -146,9 +173,9 @@ void AppWindow::generateColors()
 	const QColor base_clr ("#265080");
 	auto generateColor = [&base_clr] () {
 		const qreal base_v = base_clr.valueF();
-		const bool prob_trigger = !bool((qrand()%15));
+		const bool prob_trigger = true;//!bool((qrand()%15));
 		const qreal s = prob_trigger * base_clr.saturationF();
-		qreal v = base_v + (qrand()%200/200.-0.5) * 0.25;
+		qreal v = base_v + (qrand()%200/200.-0.5) * 0.2;
 		v = v - !prob_trigger * v * 0.7;
 		return QColor::fromHsvF(base_clr.hueF(), s, v);
 	};
@@ -167,7 +194,7 @@ void AppWindow::recountAntigravityForces(const QPointF &particle_pos)
 	std::for_each(points_.begin(), points_.end(), [&] (const QPointF* p) {
 		QPointF v = *p - particle_pos;
 		const qreal r = qSqrt(qPow(v.x(), 2.) + qPow(v.y(), 2.));
-		const qreal force = k * m_point * m_particle / (r + 50);
+		const qreal force = k * m_point * m_particle / (r*qPow(r, 0.3) + 50);
 
 		const QPointF normalized_v = v / r;
 		const QPointF force_v = normalized_v * force;
