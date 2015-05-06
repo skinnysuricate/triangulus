@@ -5,7 +5,6 @@ TARGET = triangulatord
 CONFIG(release) {
 	TARGET = triangulator
 	DEFINES += QT_NO_DEBUG_OUTPUT
-	message("Release build configured.")
 }
 
 TEMPLATE = lib

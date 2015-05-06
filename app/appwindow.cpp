@@ -6,22 +6,24 @@
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>
 #include <QtCore/QVariantAnimation>
+#include <QtCore/QtMath>
+#include <QtGui/QMouseEvent>
 
 AppWindow::AppWindow(QWidget *parent)
 	: QWidget(parent)
 {
+	setMouseTracking(true);
+#ifdef SOME_FUTURE
 	animator_.reset(new QVariantAnimation);
-	animator_->setLoopCount(-1);
 	animator_->setStartValue(0.);
-	animator_->setKeyValueAt(0.5, 1.);
-	animator_->setEndValue(0.);
-	animator_->setDuration(2000);
+	animator_->setEndValue(1.);
+	animator_->setDuration(100);
 	connect(animator_.get(), QVariantAnimation::valueChanged, this, [this] (const QVariant &v) {
 		progress_ = v.toReal();
 		update();
 	});
-	connect(animator_.get(), QVariantAnimation::currentLoopChanged, this, AppWindow::recountDeltas);
 	animator_->start();
+#endif
 }
 
 AppWindow::~AppWindow()
@@ -31,10 +33,9 @@ AppWindow::~AppWindow()
 
 void AppWindow::reset()
 {
-//	QList<QPointF> points;
-
 	qDeleteAll(points_);
 	points_.clear();
+	deltas_.clear();
 
 	const QSize bound (width() * 1.2, height() * 1.2);
 	const int x_offset = width() * 0.1;
@@ -63,23 +64,18 @@ void AppWindow::reset()
 		return true;
 	};
 
-	for (int i = 0; i < 200; ++i) {
+	for (int i = 0; i < 150; ++i) {
 		QPointF new_p (bound.width() * (qrand() % 1001 / 1000.), bound.height() * (qrand() % 1001 / 1000.));
 		if (!isSuitable(new_p)) {
 			--i;
 			continue;
 		}
-
 		points_ << new QPointF(new_p);
 	}
-		//	points_ << new QPointF(50., 50.) << new QPointF(300., 50.) << new QPointF(300., 400.) << new QPointF(50., 400.);
-
-//	qDebug() << "Generated vertexes:" << points;
 
 	polygons_ = std::move(Triangulator::triangulatePersistant(points_));
 	generateColors();
-	recountDeltas();
-
+	recountAntigravityForces(mapFromGlobal(QCursor::pos()));
 	update();
 }
 
@@ -87,25 +83,58 @@ void AppWindow::paintEvent(QPaintEvent *e)
 {
 	QPainter p (this);
 	p.setRenderHint(QPainter::Antialiasing);
-//	p.translate(-width() * 0.1, -height() * 0.1);
 	p.fillRect(rect(), QColor(40, 40, 40));
 
-	int idx = 0;
-	for (const LinkedTriangle &polygon: polygons_) {
+	auto drawPolygon = [&] (int idx) {
+		const LinkedTriangle &polygon = polygons_.at(idx);
 		QPolygonF poly;
 		poly << *polygon.v1 + deltas_.value(polygon.v1) * progress_
 			 << *polygon.v2 + deltas_.value(polygon.v2) * progress_
 			 << *polygon.v3 + deltas_.value(polygon.v3) * progress_;
 		p.setBrush(polygon_colors_.at(idx));
 		p.setPen(p.brush().color());
+		if (idx == hovered_idx_) {
+			p.setBrush(polygon_colors_.at(idx).lighter(130));
+			p.setPen(QPen(p.brush().color().lighter(170), 2., Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+		}
 		p.drawPolygon(poly);
-		++idx;
+	};
+
+	for (int idx = 0; idx < polygons_.count(); ++idx) {
+		if (idx == hovered_idx_)
+			continue;
+		drawPolygon(idx);
 	}
+	if (hovered_idx_ >= 0)
+		drawPolygon(hovered_idx_);
+
+	e->accept();
 }
 
 void AppWindow::mousePressEvent(QMouseEvent *e)
 {
 	reset();
+	e->accept();
+}
+
+void AppWindow::mouseMoveEvent(QMouseEvent *e)
+{
+	QPointF cursor_pos = e->pos();
+	int idx = 0;
+	for (const LinkedTriangle &polygon: polygons_) {
+		QPolygonF poly;
+		poly << *polygon.v1
+			 << *polygon.v2
+			 << *polygon.v3;
+		if (poly.containsPoint(cursor_pos, Qt::OddEvenFill)) {
+			hovered_idx_ = idx;
+			break;
+		}
+		++idx;
+	}
+	recountAntigravityForces(e->pos());
+	update();
+	e->accept();
 }
 
 void AppWindow::generateColors()
@@ -115,10 +144,10 @@ void AppWindow::generateColors()
 	const QColor base_clr ("#265080");
 	auto generateColor = [&base_clr] () {
 		const qreal base_v = base_clr.valueF();
-		const bool prob_trigger = !bool((qrand()%10));
+		const bool prob_trigger = !bool((qrand()%15));
 		const qreal s = prob_trigger * base_clr.saturationF();
-		qreal v = base_v + (qrand()%200/200.-0.5) * 0.2;
-		v = v - !prob_trigger * v * 0.5;
+		qreal v = base_v + (qrand()%200/200.-0.5) * 0.25;
+		v = v - !prob_trigger * v * 0.7;
 		return QColor::fromHsvF(base_clr.hueF(), s, v);
 	};
 
@@ -127,11 +156,19 @@ void AppWindow::generateColors()
 	}
 }
 
-void AppWindow::recountDeltas()
+void AppWindow::recountAntigravityForces(const QPointF &particle_pos)
 {
 	deltas_.clear();
+	const qreal k = 200.;
+	const qreal m_point = 2.;
+	const qreal m_particle = 2.;
+	std::for_each(points_.begin(), points_.end(), [&] (const QPointF* p) {
+		QPointF v = *p - particle_pos;
+		const qreal r = qSqrt(qPow(v.x(), 2.) + qPow(v.y(), 2.));
+		const qreal force = k * m_point * m_particle / (r + 50);
 
-	for (QPointF *p: points_) {
-		deltas_[p] = QPointF(qrand()%11 - 5., qrand()%11 - 5.);
-	}
+		const QPointF normalized_v = v / r;
+		const QPointF force_v = normalized_v * force;
+		deltas_[p] = force_v;
+	});
 }
