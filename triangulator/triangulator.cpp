@@ -4,14 +4,15 @@
 #include <QtCore/QSet>
 #include <QtCore/QLineF>
 #include <QtCore/QtMath>
-#include <QDebug>
+#include <QtGui/QVector3D>
+#include <QtCore/QDebug>
 
 bool pointSortLess(const QPointF &lhs, const QPointF &rhs)
 {
 	return lhs.x() < rhs.x();
 }
 
-bool pointPointersSortLess(const QPointF *lhs, const QPointF *rhs)
+bool pointPointersSortLess(const QVector3D *lhs, const QVector3D *rhs)
 {
 	return lhs->x() < rhs->x();
 }
@@ -19,7 +20,7 @@ bool pointPointersSortLess(const QPointF *lhs, const QPointF *rhs)
 Triangulator::Triangulator()
 {}
 
-bool Triangulator::analyseCircumcircle(const QPointF &p, const QPointF &p1, const QPointF &p2, const QPointF &p3, QPointF &pc, qreal &radius)
+bool Triangulator::analyseCircumcircle(const QVector3D &p, const QVector3D &p1, const QVector3D &p2, const QVector3D &p3, QVector3D &pc, qreal &radius)
 {
 	const qreal threshold = 0.00001;
 
@@ -27,15 +28,15 @@ bool Triangulator::analyseCircumcircle(const QPointF &p, const QPointF &p1, cons
 		&& qAbs(p2.y() - p3.y()) < threshold)
 		return false;
 
-	auto m = [] (const QPointF &p1, const QPointF &p2) -> qreal {
+	auto m = [] (const QVector3D &p1, const QVector3D &p2) -> qreal {
 		return -(p2.x() - p1.x()) / (p2.y() - p1.y());
 	};
 
-	auto mx = [] (const QPointF &p1, const QPointF &p2) -> qreal {
+	auto mx = [] (const QVector3D &p1, const QVector3D &p2) -> qreal {
 		return (p2.x() + p1.x()) / 2.;
 	};
 
-	auto my = [] (const QPointF &p1, const QPointF &p2) -> qreal {
+	auto my = [] (const QVector3D &p1, const QVector3D &p2) -> qreal {
 		return (p2.y() + p1.y()) / 2.;
 	};
 
@@ -62,12 +63,9 @@ bool Triangulator::analyseCircumcircle(const QPointF &p, const QPointF &p1, cons
 		const qreal my2 = my(p2, p3);
 		pc.setX((m1 * mx1 - m2 * mx2 + my2 - my1) / (m1 - m2));
 		pc.setY(m1 * (pc.x() - mx1) + my1);
-//		pc.setY((d12 > d23)
-//				? m1 * (pc.x() - mx1) + my1
-//				: m2 * (pc.x() - mx2) + my2);
 	}
 
-	auto sqrLength = [] (const QPointF &p1, const QPointF &p2) {
+	auto sqrLength = [] (const QVector3D &p1, const QVector3D &p2) {
 		const qreal dx = p1.x() - p2.x();
 		const qreal dy = p1.y() - p2.y();
 		return dx * dx + dy * dy;
@@ -79,6 +77,7 @@ bool Triangulator::analyseCircumcircle(const QPointF &p, const QPointF &p1, cons
 	return dr_sqr - radius_sqr <= threshold;
 }
 
+#ifdef UNUSED
 QList<Triangle> Triangulator::triangulate(const QSet<QPointF> &points)
 {
 	QList<Triangle> triangles;
@@ -246,8 +245,9 @@ QList<Triangle> Triangulator::triangulate(const QSet<QPointF> &points)
 
 	return triangles;
 }
+#endif
 
-QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> &persistant_points)
+QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QVector3D *> &persistant_points)
 {
 	QList<LinkedTriangle> triangles;
 
@@ -255,7 +255,7 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 		return triangles;
 
 	QList<bool> complete_flags = {false};					// false for super triangle
-	QList<QPointF*> process_points (persistant_points);		// huh..
+	QList<QVector3D*> process_points (persistant_points);		// huh..
 
 	qSort(process_points.begin(), process_points.end(), &pointPointersSortLess);
 
@@ -264,7 +264,7 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 	qreal xmax = xmin;
 	qreal ymax = ymin;
 	for (int i = 1; i < process_points.count(); ++i) {
-		const QPointF *p = process_points.at(i);
+		const QVector3D *p = process_points.at(i);
 		if (p->x() < xmin)
 			xmin = p->x();
 		if (p->x() > xmax)
@@ -283,9 +283,9 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 
 	LinkedTriangle super_triangle;
 
-	QPointF v1 (xmid - 20 * dmax, ymid - dmax);
-	QPointF v2 (xmid, ymid + 20 * dmax);
-	QPointF v3 (xmid + 20 * dmax, ymid - dmax);
+	QVector3D v1 (xmid - 20 * dmax, ymid - dmax, 0.);
+	QVector3D v2 (xmid, ymid + 20 * dmax, 0.);
+	QVector3D v3 (xmid + 20 * dmax, ymid - dmax, 0.);
 
 	process_points.append(&v1);
 	process_points.append(&v2);
@@ -297,7 +297,7 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 	triangles.push_front(super_triangle);
 
 	for (int i = 0; i < persistant_points.count(); ++i) {
-		const QPointF *p (process_points.at(i));
+		const QVector3D *p (process_points.at(i));
 
 		QList<LinkedEdge> edges;
 
@@ -306,7 +306,7 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 				continue;
 
 			qreal r = 0;
-			QPointF pc;
+			QVector3D pc;
 			LinkedTriangle t = triangles.at(j);
 			const bool is_inside = analyseCircumcircle(*p, *t.v1, *t.v2, *t.v3, pc, r);
 
@@ -330,8 +330,8 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 			QQueue<int> remove_queue;
 			bool removeJ = false;
 			for (int k = j + 1; k < edges.count(); ++k) {
-				if (((edges.at(j).p1() == edges.at(k).p2()) && (edges.at(j).p2() == edges.at(k).p1()))
-					|| ((edges.at(j).p1() == edges.at(k).p1()) && (edges.at(j).p2() == edges.at(k).p2()))) {
+				if (((edges.at(j).v1() == edges.at(k).v2()) && (edges.at(j).v2() == edges.at(k).v1()))
+					|| ((edges.at(j).v1() == edges.at(k).v1()) && (edges.at(j).v2() == edges.at(k).v2()))) {
 					removeJ = true;
 					remove_queue << k;
 				}
@@ -345,12 +345,12 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 		}
 
 		for (int j = 0; j < edges.count(); ++j) {
-			triangles.append(LinkedTriangle(edges.at(j).p1_, edges.at(j).p2_, p));
+			triangles.append(LinkedTriangle(edges.at(j).v1_, edges.at(j).v2_, p));
 			complete_flags.append(false);
 		}
 	}
 
-	QSet<const QPointF*> super_points;
+	QSet<const QVector3D*> super_points;
 	super_points << super_triangle.v1 << super_triangle.v2 << super_triangle.v3;
 	for (int i = 0; i < triangles.count(); ++i) {
 		const LinkedTriangle &t = triangles.at(i);
@@ -363,8 +363,10 @@ QList<LinkedTriangle> Triangulator::triangulatePersistant(const QList<QPointF*> 
 	return triangles;
 }
 
+#ifdef UNUSED
 Triangle::Triangle(const QPointF &p1, const QPointF &p2, const QPointF &p3)
 	: v1(p1)
 	, v2(p2)
 	, v3(p3)
 {}
+#endif

@@ -7,8 +7,8 @@
 
 template <class T>
 class QSet;
-class QPointF;
 class Triangle;
+class QVector3D;
 class LinkedTriangle;
 
 class Triangulator
@@ -17,15 +17,18 @@ class Triangulator
 public:
 	Triangulator();
 
+#ifdef UNUSED
 	static QList<Triangle> triangulate(const QSet<QPointF> &points);
-	static QList<LinkedTriangle> triangulatePersistant(const QList<QPointF *> &persistant_points);
+#endif
+	static QList<LinkedTriangle> triangulatePersistant(const QList<QVector3D *> &persistant_points);
 
 private:
-	static bool analyseCircumcircle(const QPointF &p,
-									const QPointF &p1, const QPointF &p2, const QPointF &p3,
-									QPointF &pc, qreal &radius);
+	static bool analyseCircumcircle(const QVector3D &p,
+									const QVector3D &p1, const QVector3D &p2, const QVector3D &p3,
+									QVector3D &pc, qreal &radius);
 };
 
+#ifdef UNUSED
 class Triangle
 {
 public:
@@ -35,27 +38,28 @@ public:
 	QPointF v2;
 	QPointF v3;
 };
+#endif
 
 class LinkedTriangle
 {
 public:
 	LinkedTriangle() {}
-	LinkedTriangle(const QPointF *p1, const QPointF *p2, const QPointF *p3)
+	LinkedTriangle(const QVector3D *p1, const QVector3D *p2, const QVector3D *p3)
 		: v1(p1), v2(p2), v3(p3) {}
-	const QPointF *v1;
-	const QPointF *v2;
-	const QPointF *v3;
+	const QVector3D *v1;
+	const QVector3D *v2;
+	const QVector3D *v3;
 };
 
 class LinkedEdge
 {
 public:
 	LinkedEdge() {}
-	LinkedEdge(const QPointF *p1, const QPointF *p2) : p1_(p1), p2_(p2) {}
-	const QPointF &p1() const { return *p1_; }
-	const QPointF &p2() const { return *p2_; }
-	const QPointF *p1_;
-	const QPointF *p2_;
+	LinkedEdge(const QVector3D *v1, const QVector3D *v2) : v1_(v1), v2_(v2) {}
+	const QVector3D &v1() const { return *v1_; }
+	const QVector3D &v2() const { return *v2_; }
+	const QVector3D *v1_;
+	const QVector3D *v2_;
 };
 
 inline uint qHash(const QPointF &key)

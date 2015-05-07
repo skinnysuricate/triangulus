@@ -25,10 +25,10 @@ protected:
 
 private:
 	void generateColors();
-	void recountAntigravityForces(const QPointF &particle_pos);
+	void recountAntigravityForces(const QVector3D &particle_pos);
 
-	QMap<const QPointF*, QPointF> deltas_;
-	QList<QPointF*> points_;
+	QMap<const QVector3D*, QVector3D> deltas_;
+	QList<QVector3D*> points_;
 	QList<LinkedTriangle> polygons_;
 	QList<QColor> polygon_colors_;
 	std::unique_ptr<QVariantAnimation> animator_;

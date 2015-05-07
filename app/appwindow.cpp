@@ -7,6 +7,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QVariantAnimation>
 #include <QtCore/QtMath>
+#include <QtGui/QVector3D>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPaintEvent>
 
@@ -48,35 +49,35 @@ void AppWindow::reset()
 	};
 
 	for (int i = -x_offset; i < width() + x_offset; i+=40+randomOffset(20)) {
-		points_ << new QPointF(qreal(i), 1.);
-		points_ << new QPointF(qreal(i), height() -1.);
+		points_ << new QVector3D(qreal(i), 1., 0.);
+		points_ << new QVector3D(qreal(i), height() -1., 0.);
 	}
 
 	for (int i = -y_offset; i < height() + y_offset; i+=40+randomOffset(20)) {
-		points_ << new QPointF(1., qreal(i));
-		points_ << new QPointF(width() - 1., qreal(i));
+		points_ << new QVector3D(1., qreal(i), 0.);
+		points_ << new QVector3D(width() - 1., qreal(i), 0.);
 	}
 
-	auto isSuitable = [this] (const QPointF &p) {
-		for (QPointF *existant: points_) {
-			if (qAbs((p - *existant).manhattanLength()) < 20)
+	auto isSuitable = [this] (const QVector3D &p) {
+		for (QVector3D *existant: points_) {
+			if (qAbs((p - *existant).toPointF().manhattanLength()) < 20)
 				return false;
 		}
 		return true;
 	};
 
 	for (int i = 0; i < 100; ++i) {
-		QPointF new_p (bound.width() * (qrand() % 1001 / 1000.), bound.height() * (qrand() % 1001 / 1000.));
+		QVector3D new_p (bound.width() * (qrand() % 1001 / 1000.), bound.height() * (qrand() % 1001 / 1000.), qrand() % 1001 * 0.001 * 20 - 10);
 		if (!isSuitable(new_p)) {
 			--i;
 			continue;
 		}
-		points_ << new QPointF(new_p);
+		points_ << new QVector3D(new_p);
 	}
 
 	polygons_ = std::move(Triangulator::triangulatePersistant(points_));
 	generateColors();
-	recountAntigravityForces(mapFromGlobal(QCursor::pos()));
+	recountAntigravityForces(QVector3D(mapFromGlobal(QCursor::pos())));
 	update();
 }
 
@@ -90,9 +91,9 @@ void AppWindow::paintEvent(QPaintEvent *e)
 	auto drawPolygon = [&] (int idx) {
 		const LinkedTriangle &polygon = polygons_.at(idx);
 		QPolygonF poly;
-		poly << *polygon.v1 + deltas_.value(polygon.v1) * progress_
-			 << *polygon.v2 + deltas_.value(polygon.v2) * progress_
-			 << *polygon.v3 + deltas_.value(polygon.v3) * progress_;
+		poly << (*polygon.v1 + deltas_.value(polygon.v1) * progress_).toPointF()
+			 << (*polygon.v2 + deltas_.value(polygon.v2) * progress_).toPointF()
+			 << (*polygon.v3 + deltas_.value(polygon.v3) * progress_).toPointF();
 		p.setBrush(polygon_colors_.at(idx));
 		p.setPen(p.brush().color());
 		if (idx == hovered_idx_) {
@@ -112,8 +113,8 @@ void AppWindow::paintEvent(QPaintEvent *e)
 
 	qreal max = 1.;
 	qreal med = 0.;
-	for (const QPointF &delta: deltas_.values()) {
-		qreal m_length = delta.manhattanLength();
+	for (const QVector3D &delta: deltas_.values()) {
+		qreal m_length = delta.toPointF().manhattanLength();
 		med += m_length;
 		if (m_length > max)
 			max = m_length;
@@ -121,13 +122,13 @@ void AppWindow::paintEvent(QPaintEvent *e)
 	med /= qreal(deltas_.size());
 	med = qMax(1., (max + med) * 0.8);
 
-	for (QPointF *point: points_) {
+	for (QVector3D *point: points_) {
 		if (deltas_.contains(point)) {
-			const QPointF delta = deltas_.value(point);
+			const QVector3D delta = deltas_.value(point);
 			p.setPen(Qt::NoPen);
 			p.setBrush(Qt::white);
-			p.setOpacity(delta.manhattanLength() / max);
-			p.drawEllipse(*point + delta, 1.5, 1.5);
+			p.setOpacity(delta.toPointF().manhattanLength() / max);
+			p.drawEllipse((*point + delta).toPointF(), 1.5, 1.5);
 		}
 	}
 
@@ -142,20 +143,22 @@ void AppWindow::mousePressEvent(QMouseEvent *e)
 
 void AppWindow::mouseMoveEvent(QMouseEvent *e)
 {
-//	QPointF cursor_pos = e->pos();
-//	int idx = 0;
-//	for (const LinkedTriangle &polygon: polygons_) {
-//		QPolygonF poly;
-//		poly << *polygon.v1
-//			 << *polygon.v2
-//			 << *polygon.v3;
-//		if (poly.containsPoint(cursor_pos, Qt::OddEvenFill)) {
-//			hovered_idx_ = idx;
-//			break;
-//		}
-//		++idx;
-//	}
-	recountAntigravityForces(e->pos());
+#ifdef UNUSED
+	QPointF cursor_pos = e->pos();
+	int idx = 0;
+	for (const LinkedTriangle &polygon: polygons_) {
+		QPolygonF poly;
+		poly << *polygon.v1
+			 << *polygon.v2
+			 << *polygon.v3;
+		if (poly.containsPoint(cursor_pos, Qt::OddEvenFill)) {
+			hovered_idx_ = idx;
+			break;
+		}
+		++idx;
+	}
+#endif
+	recountAntigravityForces(QVector3D(e->pos()));
 	update();
 	e->accept();
 }
@@ -163,7 +166,7 @@ void AppWindow::mouseMoveEvent(QMouseEvent *e)
 void AppWindow::resizeEvent(QResizeEvent *e)
 {
 	QWidget::resizeEvent(e);
-//	reset();
+	// TODO: Do something
 }
 
 void AppWindow::generateColors()
@@ -173,7 +176,7 @@ void AppWindow::generateColors()
 	const QColor base_clr ("#265080");
 	auto generateColor = [&base_clr] () {
 		const qreal base_v = base_clr.valueF();
-		const bool prob_trigger = true;//!bool((qrand()%15));
+		const bool prob_trigger = !bool((qrand()%15));
 		const qreal s = prob_trigger * base_clr.saturationF();
 		qreal v = base_v + (qrand()%200/200.-0.5) * 0.2;
 		v = v - !prob_trigger * v * 0.7;
@@ -185,19 +188,19 @@ void AppWindow::generateColors()
 	}
 }
 
-void AppWindow::recountAntigravityForces(const QPointF &particle_pos)
+void AppWindow::recountAntigravityForces(const QVector3D &particle_pos)
 {
 	deltas_.clear();
 	const qreal k = 200.;
 	const qreal m_point = 2.;
 	const qreal m_particle = 2.;
-	std::for_each(points_.begin(), points_.end(), [&] (const QPointF* p) {
-		QPointF v = *p - particle_pos;
+	std::for_each(points_.begin(), points_.end(), [&] (const QVector3D* p) {
+		QVector3D v = *p - particle_pos;
 		const qreal r = qSqrt(qPow(v.x(), 2.) + qPow(v.y(), 2.));
-		const qreal force = k * m_point * m_particle / (r*qPow(r, 0.3) + 50);
+		const qreal force = k * m_point * m_particle / (r*qPow(r, 0.1) + 70);
 
-		const QPointF normalized_v = v / r;
-		const QPointF force_v = normalized_v * force;
+		const QVector3D normalized_v = v / r;
+		const QVector3D force_v = normalized_v * force;
 		deltas_[p] = force_v;
 	});
 }
