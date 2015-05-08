@@ -11,6 +11,8 @@
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPaintEvent>
 
+#define HOVER_POLYGON
+
 AppWindow::AppWindow(QWidget *parent)
 	: QWidget(parent)
 	, light_(QVector3D(0, 0, 200), "#FFF", "#17202B")
@@ -152,14 +154,14 @@ void AppWindow::mousePressEvent(QMouseEvent *e)
 
 void AppWindow::mouseMoveEvent(QMouseEvent *e)
 {
-#ifdef UNUSED
+#ifdef HOVER_POLYGON
 	QPointF cursor_pos = e->pos();
 	int idx = 0;
 	for (const LinkedTriangle &polygon: polygons_) {
 		QPolygonF poly;
-		poly << *polygon.v1
-			 << *polygon.v2
-			 << *polygon.v3;
+		poly << polygon.v1->toPointF()
+			 << polygon.v2->toPointF()
+			 << polygon.v3->toPointF();
 		if (poly.containsPoint(cursor_pos, Qt::OddEvenFill)) {
 			hovered_idx_ = idx;
 			break;
