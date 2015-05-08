@@ -11,11 +11,12 @@
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPaintEvent>
 
-#define HOVER_POLYGON
+//#define HOVER_POLYGON
+//#define HIGHLIGHT_VERTEXES
 
 AppWindow::AppWindow(QWidget *parent)
 	: QWidget(parent)
-	, light_(QVector3D(0, 0, 200), "#FFF", "#17202B")
+	, light_(QVector3D(0, 0, 100), "#FFF", "#003D66")
 {
 	setMouseTracking(true);
 #ifdef SOME_FUTURE
@@ -51,20 +52,20 @@ void AppWindow::reset()
 		return qrand()%limit - limit;
 	};
 
-	for (int i = -x_offset; i < width() + x_offset; i+=40+randomOffset(20)) {
+	for (int i = -x_offset; i < width() + x_offset; i+=60+randomOffset(20)) {
 		points_ << new QVector3D(qreal(i), 1., 0.);
 		points_ << new QVector3D(qreal(i), height() -1., 0.);
 	}
 
-	for (int i = -y_offset; i < height() + y_offset; i+=40+randomOffset(20)) {
+	for (int i = -y_offset; i < height() + y_offset; i+=60+randomOffset(20)) {
 		points_ << new QVector3D(1., qreal(i), 0.);
 		points_ << new QVector3D(width() - 1., qreal(i), 0.);
 	}
 
-	const quint32 min_distance = 30;
+	const quint32 min_distance = 25;
 	const quint32 square = width() * height();
 	const quint32 max_v_count = square / qPow(min_distance, 2.);
-	const quint32 v_count = qMin(quint32(200), max_v_count);
+	const quint32 v_count = qMin(quint32(100), max_v_count);
 
 	auto isSuitable = [this, &min_distance] (const QVector3D &p) {
 		for (QVector3D *existant: points_) {
@@ -74,10 +75,10 @@ void AppWindow::reset()
 		return true;
 	};
 
-	for (int i = 0; i < v_count; ++i) {
+	for (uint i = 0; i < v_count; ++i) {
 		QVector3D new_p (bound.width() * (qrand() % 1001 / 1000.),
 						 bound.height() * (qrand() % 1001 / 1000.),
-						 qrand() % 1001 * 0.001 * 10.);
+						 qrand() % 1001 * 0.001 * 5.);
 		if (!isSuitable(new_p)) {
 			--i;
 			continue;
@@ -86,7 +87,7 @@ void AppWindow::reset()
 	}
 
 	polygons_ = std::move(Triangulator::triangulatePersistant(points_));
-	light_.setPosition(QVector3D(width() * 2 / 3., height() * 2 / 3., 70.));
+	light_.setPosition(mapFromGlobal(QCursor::pos()));
 	generateColors();
 	recountAntigravityForces(QVector3D(mapFromGlobal(QCursor::pos())));
 	update();
@@ -122,6 +123,7 @@ void AppWindow::paintEvent(QPaintEvent *e)
 	if (hovered_idx_ >= 0)
 		drawPolygon(hovered_idx_);
 
+#ifdef HIGHLIGHT_VERTEXES
 	qreal max = 1.;
 	qreal med = 0.;
 	for (const QVector3D &delta: deltas_.values()) {
@@ -142,6 +144,7 @@ void AppWindow::paintEvent(QPaintEvent *e)
 			p.drawEllipse((*point + delta).toPointF(), 1.5, 1.5);
 		}
 	}
+#endif
 
 	e->accept();
 }
@@ -201,8 +204,8 @@ void AppWindow::generateColors()
 		polygon_colors_ << generateColor();
 	}
 #endif
-	const QColor material_diffuse ("#555");
-	const QColor material_ambient ("#FFF");
+	const QColor material_diffuse ("#19A3FF");
+	const QColor material_ambient ("#007ACC");
 
 	auto centroid = [] (const LinkedTriangle &p) {
 		return QVector3D((p.v1->x() + p.v2->x() + p.v3->x()) / 3.,
@@ -240,7 +243,7 @@ void AppWindow::generateColors()
 void AppWindow::recountAntigravityForces(const QVector3D &particle_pos)
 {
 	deltas_.clear();
-	const qreal k = 200.;
+	const qreal k = 300.;
 	const qreal m_point = 2.;
 	const qreal m_particle = 2.;
 	std::for_each(points_.begin(), points_.end(), [&] (const QVector3D* p) {
