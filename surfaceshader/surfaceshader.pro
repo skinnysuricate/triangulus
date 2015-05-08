@@ -5,10 +5,12 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 SOURCES += \
-	surfaceshader.cpp
+	surfaceshader.cpp \
+    light.cpp
 
 HEADERS += \
-	surfaceshader.h
+	surfaceshader.h \
+    light.h
 
 DESTDIR = ../lib
 OBJECTS_DIR = ../.obj

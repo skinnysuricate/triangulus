@@ -13,6 +13,7 @@
 
 AppWindow::AppWindow(QWidget *parent)
 	: QWidget(parent)
+	, light_(QVector3D(0, 0, 200), "#FFF", "#17202B")
 {
 	setMouseTracking(true);
 #ifdef SOME_FUTURE
@@ -58,16 +59,23 @@ void AppWindow::reset()
 		points_ << new QVector3D(width() - 1., qreal(i), 0.);
 	}
 
-	auto isSuitable = [this] (const QVector3D &p) {
+	const quint32 min_distance = 30;
+	const quint32 square = width() * height();
+	const quint32 max_v_count = square / qPow(min_distance, 2.);
+	const quint32 v_count = qMin(quint32(200), max_v_count);
+
+	auto isSuitable = [this, &min_distance] (const QVector3D &p) {
 		for (QVector3D *existant: points_) {
-			if (qAbs((p - *existant).toPointF().manhattanLength()) < 20)
+			if (qAbs((p - *existant).toPointF().manhattanLength()) < min_distance)
 				return false;
 		}
 		return true;
 	};
 
-	for (int i = 0; i < 100; ++i) {
-		QVector3D new_p (bound.width() * (qrand() % 1001 / 1000.), bound.height() * (qrand() % 1001 / 1000.), qrand() % 1001 * 0.001 * 20 - 10);
+	for (int i = 0; i < v_count; ++i) {
+		QVector3D new_p (bound.width() * (qrand() % 1001 / 1000.),
+						 bound.height() * (qrand() % 1001 / 1000.),
+						 qrand() % 1001 * 0.001 * 10.);
 		if (!isSuitable(new_p)) {
 			--i;
 			continue;
@@ -76,6 +84,7 @@ void AppWindow::reset()
 	}
 
 	polygons_ = std::move(Triangulator::triangulatePersistant(points_));
+	light_.setPosition(QVector3D(width() * 2 / 3., height() * 2 / 3., 70.));
 	generateColors();
 	recountAntigravityForces(QVector3D(mapFromGlobal(QCursor::pos())));
 	update();
@@ -159,6 +168,8 @@ void AppWindow::mouseMoveEvent(QMouseEvent *e)
 	}
 #endif
 	recountAntigravityForces(QVector3D(e->pos()));
+	light_.setPosition(e->pos());
+	generateColors();
 	update();
 	e->accept();
 }
@@ -173,6 +184,7 @@ void AppWindow::generateColors()
 {
 	polygon_colors_.clear();
 
+#ifdef UNUSED
 	const QColor base_clr ("#265080");
 	auto generateColor = [&base_clr] () {
 		const qreal base_v = base_clr.valueF();
@@ -185,6 +197,41 @@ void AppWindow::generateColors()
 
 	for (int i=0; i<polygons_.count(); ++i) {
 		polygon_colors_ << generateColor();
+	}
+#endif
+	const QColor material_diffuse ("#555");
+	const QColor material_ambient ("#FFF");
+
+	auto centroid = [] (const LinkedTriangle &p) {
+		return QVector3D((p.v1->x() + p.v2->x() + p.v3->x()) / 3.,
+						 (p.v1->y() + p.v2->y() + p.v3->y()) / 3.,
+						 (p.v1->z() + p.v2->z() + p.v3->z()) / 3.);
+	};
+
+	auto blend_diffusion = [] (const QColor &c1, const QColor &c2, qreal angle) {
+		return QColor::fromRgbF(c1.redF()*c2.redF()*angle, c1.greenF()*c2.greenF()*angle, c1.blueF()*c2.blueF()*angle);
+	};
+
+	auto blend_ambient = [] (const QColor &c1, const QColor &c2) {
+		return QColor::fromRgbF(c1.redF()*c2.redF(), c1.greenF()*c2.greenF(), c1.blueF()*c2.blueF());
+	};
+
+	auto add = [] (const QColor &c1, const QColor &c2) {
+		return QColor::fromRgbF(qMin(c1.redF() + c2.redF(), 1.),
+								qMin(c1.greenF() + c2.greenF(), 1.),
+								qMin(c1.blueF() + c2.blueF(), 1.));
+	};
+
+	const QColor scene_ambient = blend_ambient(material_ambient, light_.ambient());
+
+	for (const LinkedTriangle &polygon: polygons_) {
+		const QVector3D c = centroid(polygon);
+		const QVector3D normal = QVector3D::normal(*polygon.v1, *polygon.v2, *polygon.v3);
+		const QVector3D ray = (c - light_.position()).normalized();
+		qreal dot_product = qMax(0.f, QVector3D::dotProduct(normal, ray));
+
+		const QColor polygon_diffuse = blend_diffusion(material_diffuse, light_.diffuse(), dot_product);
+		polygon_colors_ << add(polygon_diffuse, scene_ambient);
 	}
 }
 

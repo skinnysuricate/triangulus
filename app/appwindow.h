@@ -4,7 +4,8 @@
 #include <memory>
 #include <QWidget>
 #include <QMap>
-#include "triangulator.h"
+#include <triangulator.h>
+#include <light.h>
 
 class QVariantAnimation;
 
@@ -27,6 +28,7 @@ private:
 	void generateColors();
 	void recountAntigravityForces(const QVector3D &particle_pos);
 
+	Light light_;
 	QMap<const QVector3D*, QVector3D> deltas_;
 	QList<QVector3D*> points_;
 	QList<LinkedTriangle> polygons_;
