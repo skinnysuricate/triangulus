@@ -1,9 +1,10 @@
 #include "light.h"
 
-Light::Light(const QVector3D &v, const QColor &diffuse, const QColor &ambient)
+Light::Light(const QVector3D &v, const QColor &diffuse, const QColor &ambient, qreal decay)
 	: v_(v)
 	, clr_diffuse_(diffuse)
 	, clr_ambient_(ambient)
+	, fading_(decay)
 {}
 
 Light::~Light()

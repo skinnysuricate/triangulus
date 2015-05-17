@@ -25,10 +25,11 @@ protected:
 	void resizeEvent(QResizeEvent *e) override;
 
 private:
-	void generateColors();
+	void recountColors();
 	void recountAntigravityForces(const QVector3D &particle_pos);
+	void recountWaveState();
 
-	Light light_;
+	QList<Light> light_sources_;
 	QMap<const QVector3D*, QVector3D> deltas_;
 	QList<QVector3D*> points_;
 	QList<LinkedTriangle> polygons_;
@@ -36,6 +37,7 @@ private:
 	std::unique_ptr<QVariantAnimation> animator_;
 	qreal progress_ = 1.;
 	int hovered_idx_ = -1;
+	QPointF earthquake_pos_;
 };
 
 #endif // APPWINDOW_H

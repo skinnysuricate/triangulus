@@ -1,16 +1,24 @@
-QT       -= gui
+QT -= gui
 
 TARGET = surfaceshader
 TEMPLATE = lib
 CONFIG += staticlib
 
 SOURCES += \
-	surfaceshader.cpp \
-    light.cpp
+	light.cpp \
+	surface.cpp \
+	material.cpp \
+	distortion.cpp \
+	geometry.cpp \
+	shaderscene.cpp
 
 HEADERS += \
-	surfaceshader.h \
-    light.h
+	light.h \
+	surface.h \
+	material.h \
+	distortion.h \
+	geometry.h \
+	shaderscene.h
 
 DESTDIR = ../lib
 OBJECTS_DIR = ../.obj
