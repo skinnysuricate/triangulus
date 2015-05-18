@@ -5,20 +5,24 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 SOURCES += \
+	triangulator.cpp \
 	light.cpp \
 	surface.cpp \
 	material.cpp \
 	distortion.cpp \
-	geometry.cpp \
-	shaderscene.cpp
+	mesh.cpp \
+	shaderscene.cpp \
+	triangle.cpp
 
 HEADERS += \
+	triangulator.h \
 	light.h \
 	surface.h \
 	material.h \
 	distortion.h \
-	geometry.h \
-	shaderscene.h
+	mesh.h \
+	shaderscene.h \
+	triangle.h
 
 DESTDIR = ../lib
 OBJECTS_DIR = ../.obj

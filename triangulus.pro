@@ -1,8 +1,8 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-	triangulator \
+#	triangulator \
 	surfaceshader \
 	app
 
-app.depends = triangulator surfaceshader
+app.depends = surfaceshader

@@ -3,7 +3,7 @@
 
 #include <QtGui/QVector3D>
 
-class Geometry;
+class Mesh;
 
 class Distortion
 {
@@ -15,9 +15,9 @@ public:
 	void setPosition(const QVector3D &v);
 
 	/**
-	 * Calculates translations for each vertex of the geometry
+	 * Calculates translations for each vertex of the mesh
 	 */
-	QList<QVector3D> calcDistortion(const Geometry &g);
+	QList<QVector3D> calcDistortion(const Mesh &mesh);
 
 private:
 	QVector3D v_;

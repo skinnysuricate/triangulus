@@ -17,7 +17,7 @@ public:
 
 	ShaderScene &add(const Light &l);
 	ShaderScene &add(const Distortion &d);
-	ShaderScene &add(Surface &&s);
+	ShaderScene &add(Surface s);
 
 	void render(QPainter *p);
 

@@ -1,17 +1,17 @@
 #ifndef SURFACE_H
 #define SURFACE_H
 
-#include "geometry.h"
+#include "mesh.h"
 #include "material.h"
 
 class Surface
 {
 public:
-	Surface(const Material &m, Geometry &&g);
+	Surface(const Material &material, Mesh &&mesh);
 	~Surface();
 
 private:
-	Geometry geometry_;
+	Mesh mesh_;
 	Material material_;
 };
 
