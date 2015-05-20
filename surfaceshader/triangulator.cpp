@@ -6,7 +6,6 @@
 #include <QtCore/QtMath>
 #include <QtGui/QVector3D>
 #include <QtCore/QDebug>
-
 #include "triangle.h"
 
 class Edge
@@ -90,7 +89,7 @@ bool Triangulator::analyseCircumcircle(const QVector3D &p, const QVector3D &p1, 
 	return dr_sqr - radius_sqr <= threshold;
 }
 
-Mesh Triangulator::buildMesh(const QList<QVector3D *> &vertexes)
+QList<Triangle> Triangulator::buildMesh(const QList<QVector3D*> &vertexes)
 {
 	QList<Triangle> triangles;
 
@@ -98,7 +97,7 @@ Mesh Triangulator::buildMesh(const QList<QVector3D *> &vertexes)
 		return triangles;
 
 	QList<bool> complete_flags = {false};					// false for super triangle
-	QList<QVector3D*> process_points (vertexes);		// huh..
+	QList<QVector3D*> process_points (vertexes);			// huh..
 
 	qSort(process_points.begin(), process_points.end(), &vertexSortLess);
 
@@ -171,15 +170,15 @@ Mesh Triangulator::buildMesh(const QList<QVector3D *> &vertexes)
 
 		for (int j = 0; j < edges.count() - 1; ++j) {
 			QQueue<int> remove_queue;
-			bool removeJ = false;
+			bool remove_j = false;
 			for (int k = j + 1; k < edges.count(); ++k) {
 				if (((edges.at(j).v1() == edges.at(k).v2()) && (edges.at(j).v2() == edges.at(k).v1()))
 					|| ((edges.at(j).v1() == edges.at(k).v1()) && (edges.at(j).v2() == edges.at(k).v2()))) {
-					removeJ = true;
+					remove_j = true;
 					remove_queue << k;
 				}
 			}
-			if (removeJ) {
+			if (remove_j) {
 				remove_queue << j;
 				--j;
 			}

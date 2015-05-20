@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-class QPainter;
+class QPaintDevice;
 class Surface;
 class Light;
 class Distortion;
@@ -15,16 +15,26 @@ public:
 	explicit ShaderScene(QObject *parent = 0);
 	~ShaderScene();
 
-	ShaderScene &add(const Light &l);
-	ShaderScene &add(const Distortion &d);
+	QSize size() const { return surface_.size(); }
+
+	void beginBuildScene();
+	void endBuildScene();
+
+	ShaderScene &add(const Light &l, bool mouse_binded = false);
+	ShaderScene &add(const Distortion &d, bool mouse_binded = false);
 	ShaderScene &add(Surface s);
 
-	void render(QPainter *p);
+	void render(QPaintDevice *context);
+
+signals:
+	void invalidated();
 
 private:
 	Surface surface_;
 	QList<Light> lights_;
 	QList<Distortion> distortions_;
+
+	bool lock_updates_;
 };
 
 #endif // SHADERSCENE_H

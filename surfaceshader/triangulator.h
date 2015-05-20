@@ -1,7 +1,7 @@
 #ifndef TRIANGULATOR_H
 #define TRIANGULATOR_H
 
-#include "mesh.h"
+#include "triangle.h"
 
 template <class T>
 class QList;
@@ -10,7 +10,7 @@ class QVector3D;
 class Triangulator
 {
 public:
-	static Mesh buildMesh(const QList<QVector3D *> &vertexes);
+	static QList<Triangle> buildMesh(const QList<QVector3D*> &vertexes);
 
 private:
 	static bool analyseCircumcircle(const QVector3D &p,

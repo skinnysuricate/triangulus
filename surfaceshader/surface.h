@@ -7,10 +7,17 @@
 class Surface
 {
 public:
-	Surface(const Material &material, Mesh &&mesh);
+	Surface(const QSize &size, const Material &material, qreal mesh_density);
 	~Surface();
 
+	const QSize &size() const { return size_; }
+	const Mesh &mesh() const { return mesh_; }
+	const Material &material() const { return material_; }
+
 private:
+	static QRect coveringRect(const QSize &size);
+
+	QSize size_;
 	Mesh mesh_;
 	Material material_;
 };
