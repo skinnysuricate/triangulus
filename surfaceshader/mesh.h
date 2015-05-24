@@ -14,8 +14,9 @@ public:
 	explicit Mesh(const QRect &area, qreal density);
 	Mesh(Mesh &&other);
 	~Mesh();
+	Mesh &operator=(Mesh &&other);
 
-	const QVector<QVector3D*> &vertexes() const { return vertexes_; }
+	const QList<QVector3D*> &vertexes() const { return vertexes_; }
 	const QList<Triangle> &polygons() const { return polygons_; }
 
 private:

@@ -1,6 +1,7 @@
 #ifndef TRIANGULATOR_H
 #define TRIANGULATOR_H
 
+#include <qnamespace.h>
 #include "triangle.h"
 
 template <class T>

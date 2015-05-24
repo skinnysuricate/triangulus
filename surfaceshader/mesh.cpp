@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <QtCore/QDateTime>
+#include <QtGui/QVector3D>
 #include "triangulator.h"
 
 Mesh::Mesh(const QRect &area, qreal density)
@@ -20,7 +21,14 @@ Mesh::~Mesh()
 	qDeleteAll(vertexes_);
 }
 
-void Mesh::generateVertexes(const QRect &area, qreal density)
+Mesh &Mesh::operator=(Mesh &&other)
+{
+	vertexes_ = std::move(other.vertexes_);
+	polygons_ = std::move(other.polygons_);
+	return *this;
+}
+
+void Mesh::generateVertexes(const QRect &area, qreal /*density*/)
 {
 	qDeleteAll(vertexes_);
 	vertexes_.clear();
@@ -43,11 +51,11 @@ void Mesh::generateVertexes(const QRect &area, qreal density)
 
 	const quint32 min_distance = 20;
 	const quint32 square = area.width() * area.height();
-	const quint32 max_v_count = square / qPow(min_distance, 2.);
+	const quint32 max_v_count = square / (min_distance * min_distance);
 	const quint32 v_count = qMin(quint32(250), max_v_count);
 
 	auto isSuitable = [this, &min_distance] (const QVector3D &p) {
-		for (QVector3D *existant: points_) {
+		for (QVector3D *existant: vertexes_) {
 			if (qAbs((p - *existant).toPointF().manhattanLength()) < min_distance)
 				return false;
 		}

@@ -9,6 +9,8 @@ class Surface
 public:
 	Surface(const QSize &size, const Material &material, qreal mesh_density);
 	~Surface();
+	Surface(Surface &&other);
+	Surface &operator=(Surface &&other);
 
 	const QSize &size() const { return size_; }
 	const Mesh &mesh() const { return mesh_; }

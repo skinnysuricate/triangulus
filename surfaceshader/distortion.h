@@ -1,6 +1,7 @@
 #ifndef DISTORTION_H
 #define DISTORTION_H
 
+#include <QtCore/QHash>
 #include <QtGui/QVector3D>
 
 class Mesh;
@@ -17,7 +18,7 @@ public:
 	/**
 	 * Calculates translations for each vertex of the mesh
 	 */
-	QHash<QVector3D*, QVector3D> calcDistortion(const Mesh &mesh);
+	QHash<const QVector3D *, QVector3D> calcDistortion(const Mesh &mesh) const;
 
 private:
 	QVector3D v_;

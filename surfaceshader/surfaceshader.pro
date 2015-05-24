@@ -2,7 +2,9 @@ QT -= gui
 
 TARGET = surfaceshader
 TEMPLATE = lib
-CONFIG += staticlib
+CONFIG += \
+	staticlib \
+	c++11
 
 SOURCES += \
 	triangulator.cpp \

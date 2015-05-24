@@ -29,9 +29,6 @@ bool vertexSortLess(const QVector3D *lhs, const QVector3D *rhs)
 	return lhs->x() < rhs->x();
 }
 
-Triangulator::Triangulator()
-{}
-
 bool Triangulator::analyseCircumcircle(const QVector3D &p, const QVector3D &p1, const QVector3D &p2, const QVector3D &p3, QVector3D &pc, qreal &radius)
 {
 	const qreal threshold = 0.00001;

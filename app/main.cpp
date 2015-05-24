@@ -1,10 +1,10 @@
-#include "appwindow.h"
+#include "canvaswidget.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
-	AppWindow w;
+	CanvasWidget w;
 	w.resize(500, 500);
 	w.show();
 

@@ -11,6 +11,20 @@ Surface::Surface(const QSize &size, const Material &material, qreal mesh_density
 Surface::~Surface()
 {}
 
+Surface::Surface(Surface &&other)
+	: size_(other.size_)
+	, mesh_(std::move(other.mesh_))
+	, material_(other.material_)
+{}
+
+Surface &Surface::operator=(Surface &&other)
+{
+	size_ = other.size_;
+	mesh_ = std::move(other.mesh_);
+	material_ = other.material_;
+	return *this;
+}
+
 QRect Surface::coveringRect(const QSize &size)
 {
 	const qreal x_margin = 0.05 * size.width();
