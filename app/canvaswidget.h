@@ -20,6 +20,8 @@ protected:
 
 private:
 	void buildDefaultScene();
+	void buildBlueScene();
+
 	std::unique_ptr<ShaderScene> scene_;
 };
 

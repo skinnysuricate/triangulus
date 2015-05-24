@@ -9,7 +9,7 @@ CanvasWidget::CanvasWidget(QWidget *parent)
 	: QWidget(parent)
 {
 	setMouseTracking(true);
-	buildDefaultScene();
+	buildBlueScene();
 }
 
 CanvasWidget::~CanvasWidget()
@@ -34,11 +34,25 @@ void CanvasWidget::mousePressEvent(QMouseEvent *e)
 
 void CanvasWidget::buildDefaultScene()
 {
-	Material m (QColor("#555555"), QColor("#222222"));
+	Material m (QColor("#555555"), QColor("#444444"));
 	scene_.reset(new ShaderScene(QSize(500, 500), m, 5.));
 	scene_->beginBuildScene();
 	scene_->add(Light(QVector3D(200, 100, 100), "#FFDDC2", "#333", 0.02), true)
-			.add(Light(QVector3D(50, 150, 50), "#92F1FF", "#333", 0.03))
+			.add(Light(QVector3D(50, 150, 400), "#4400EE", "#555", 0.07), true)
+			.add(Light(QVector3D(50, 150, 50), "#EEEE00", "#444", 0.01), true)
+			.add(Distortion(), true);
+	scene_->endBuildScene();
+	connect(scene_.get(), SIGNAL(invalidated()), this, SLOT(update()));
+}
+
+void CanvasWidget::buildBlueScene()
+{
+	Material m (QColor("#224b73"), QColor("#335f8a"));
+	scene_.reset(new ShaderScene(QSize(500, 500), m, 5.));
+	scene_->beginBuildScene();
+	scene_->add(Light(QVector3D(200, 100, 100), "#fff", "#333", 0.02), true)
+			.add(Light(QVector3D(50, 150, 400), "#808080", "#555", 0.01), true)
+			.add(Light(QVector3D(50, 150, 50), "#82c1ff", "#444", 0.01), true)
 			.add(Distortion(), true);
 	scene_->endBuildScene();
 	connect(scene_.get(), SIGNAL(invalidated()), this, SLOT(update()));

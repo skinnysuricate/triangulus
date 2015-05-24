@@ -65,7 +65,7 @@ void Mesh::generateVertexes(const QRect &area, qreal /*density*/)
 	for (uint i = 0; i < v_count; ++i) {
 		QVector3D new_p (area.width() * (qrand() % 1001 / 1000.),
 						 area.height() * (qrand() % 1001 / 1000.),
-						 qrand() % 1001 * 0.001 * 1.1);
+						 qrand() % 1001 * 0.001 * 2.1);
 		if (!isSuitable(new_p)) {
 			--i;
 			continue;

@@ -69,14 +69,14 @@ void ShaderScene::render(QPaintDevice *context) const
 	const qreal y_scale = context->height() / qreal(size().height());
 	p.scale(x_scale, y_scale);
 
-	p.setRenderHint(QPainter::Antialiasing);
+	p.setRenderHint(QPainter::HighQualityAntialiasing);
 	p.fillRect(QRect(0, 0, context->width(), context->height()), QColor(40, 40, 40));
 
 	auto drawPolygon = [&] (int idx) {
 		const Triangle &triangle = surface_.mesh().polygons().at(idx);
 		QPolygonF polygon = getPolygon(triangle);
 		p.setBrush(polygon_colors_.at(idx));
-		p.setPen(p.brush().color());
+		p.setPen(Qt::NoPen);
 		p.drawPolygon(polygon);
 	};
 
