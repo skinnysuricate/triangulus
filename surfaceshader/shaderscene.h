@@ -61,6 +61,9 @@ private:
 	bool locked_updates_;
 	mutable bool processed_;
 
+	std::unique_ptr<QVariantAnimation> animator_;
+	QVector3D animator_pos_;
+
 	mutable QHash<const QVector3D*, QVector3D> distortion_impacts_;
 	mutable QList<QColor> polygon_colors_;
 };

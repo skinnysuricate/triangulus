@@ -47,13 +47,14 @@ void CanvasWidget::buildDefaultScene()
 
 void CanvasWidget::buildBlueScene()
 {
-	Material m (QColor("#224b73"), QColor("#335f8a"));
+	Material m (QColor("#2E5A86"), QColor("#335f8a"));
 	scene_.reset(new ShaderScene(QSize(500, 500), m, 5.));
 	scene_->beginBuildScene();
-	scene_->add(Light(QVector3D(200, 100, 100), "#fff", "#333", 0.02), true)
-			.add(Light(QVector3D(50, 150, 400), "#808080", "#555", 0.01), true)
-			.add(Light(QVector3D(50, 150, 50), "#82c1ff", "#444", 0.01), true)
-			.add(Distortion(), true);
+	scene_->add(Light(QVector3D(200, 100, 50), "#fff", "#333", 0.02), true)
+			.add(Light(QVector3D(50, 150, 200), "#808080", "#555", 0.01), true)
+			.add(Light(QVector3D(50, 150, 25), "#C4E2FF", "#444", 0.001), true)
+			.add(Distortion(), true)
+			;
 	scene_->endBuildScene();
 	connect(scene_.get(), SIGNAL(invalidated()), this, SLOT(update()));
 }

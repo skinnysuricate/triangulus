@@ -3,13 +3,51 @@
 #include <utility>
 #include <QtGui/QPainter>
 #include <QtGui/QPaintDevice>
+#include <QtCore/QDebug>
+#include <QtCore/QVariantAnimation>
 
 ShaderScene::ShaderScene(const QSize &s, const Material &m, qreal density, QObject *parent)
 	: QObject(parent)
 	, surface_(s, m , density)
 	, locked_updates_(false)
 	, processed_(false)
-{}
+{
+	animator_.reset(new QVariantAnimation);
+	animator_->setStartValue(0.);
+	animator_->setEndValue(1.);
+	animator_->setDuration(3000);
+	animator_->setLoopCount(-1);
+	connect(animator_.get(), &QVariantAnimation::valueChanged, this, [this] (const QVariant &value) {
+		const qreal progress = value.toReal();
+
+		const qreal R = 40;
+		const qreal r = R * 0.25;
+		const qreal h = R;
+		const qreal phi = 2 * 3.14 * progress;
+		const qreal x = (R - r) * cos(phi) + h * cos((R/r - 1) * phi);
+		const qreal y = (R - r) * sin(phi) - h * sin((R/r - 1) * phi);
+//		const qreal x = 50 * sin(4 * 3.14 * progress) * 0.5;
+
+		for (uint idx: binded_distortion_indexes_) {
+			QVector3D v = distortions_.at(idx).position();
+			const int sign = 1;//-1 + (idx % 2) * 2;
+			v.setX(animator_pos_.x() + x * sign);
+			v.setY(animator_pos_.y() + y * sign);
+			distortions_[idx].setPosition(v);
+		}
+
+		for (uint idx: binded_light_indexes_) {
+			QVector3D v = lights_.at(idx).position();
+			const int sign = 1;//-1 + (idx % 2) * 2;
+			v.setX(animator_pos_.x() + x * sign);
+			v.setY(animator_pos_.y() + y * sign);
+			lights_[idx].setPosition(v);
+		}
+
+		invalidate();
+	});
+	animator_->start();
+}
 
 ShaderScene::~ShaderScene()
 {}
@@ -69,7 +107,7 @@ void ShaderScene::render(QPaintDevice *context) const
 	const qreal y_scale = context->height() / qreal(size().height());
 	p.scale(x_scale, y_scale);
 
-	p.setRenderHint(QPainter::HighQualityAntialiasing);
+//	p.setRenderHint(QPainter::Antialiasing);
 	p.fillRect(QRect(0, 0, context->width(), context->height()), QColor(40, 40, 40));
 
 	auto drawPolygon = [&] (int idx) {
@@ -77,6 +115,7 @@ void ShaderScene::render(QPaintDevice *context) const
 		QPolygonF polygon = getPolygon(triangle);
 		p.setBrush(polygon_colors_.at(idx));
 		p.setPen(Qt::NoPen);
+//		p.setPen(p.brush().color());
 		p.drawPolygon(polygon);
 	};
 
@@ -112,21 +151,24 @@ void ShaderScene::handleMouseMove(const QPoint &pos)
 	if (binded_distortion_indexes_.isEmpty() && binded_light_indexes_.isEmpty())
 		return;
 
-	for (uint idx: binded_distortion_indexes_) {
-		QVector3D v = distortions_.at(idx).position();
-		v.setX(pos.x());
-		v.setY(pos.y());
-		distortions_[idx].setPosition(v);
-	}
+	animator_pos_.setX(pos.x());
+	animator_pos_.setY(pos.y());
 
-	for (uint idx: binded_light_indexes_) {
-		QVector3D v = lights_.at(idx).position();
-		v.setX(pos.x());
-		v.setY(pos.y());
-		lights_[idx].setPosition(v);
-	}
+//	for (uint idx: binded_distortion_indexes_) {
+//		QVector3D v = distortions_.at(idx).position();
+//		v.setX(pos.x());
+//		v.setY(pos.y());
+//		distortions_[idx].setPosition(v);
+//	}
 
-	invalidate();
+//	for (uint idx: binded_light_indexes_) {
+//		QVector3D v = lights_.at(idx).position();
+//		v.setX(pos.x());
+//		v.setY(pos.y());
+//		lights_[idx].setPosition(v);
+//	}
+
+//	invalidate();
 }
 
 void ShaderScene::invalidate()
