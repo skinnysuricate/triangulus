@@ -4,9 +4,12 @@
 #include <memory>
 #include <QObject>
 #include <QList>
-#include <QVector>
+#include <QMap>
 #include <QHash>
+
 #include "surface.h"
+#include "cluster.h"
+#include "animator.h"
 #include "light.h"
 #include "distortion.h"
 
@@ -27,12 +30,14 @@ public:
 	void beginBuildScene();
 	void endBuildScene();
 
-	ShaderScene &add(const Light &l, bool mouse_binded = false);
-	ShaderScene &add(const Distortion &d, bool mouse_binded = false);
-	ShaderScene &add(Surface s);
+	quint64 add(const Light &l);
+	quint64 add(const Distortion &d);
+	quint64 add(std::unique_ptr<Cluster> cluster);
+	void add(Surface s);
+
+	void move(quint64 id, const QPoint &pos);
 
 	void render(QPaintDevice *context) const;
-	void handleMouseMove(const QPoint &pos);
 
 signals:
 	void invalidated();
@@ -44,20 +49,15 @@ private:
 	void processDistortions() const;
 	QPolygonF getPolygon(const Triangle &t) const;
 
-#ifdef TEMPLATES
-	template <class SceneElement>
-	QList<SceneElement> &container();
-	template <>
-	QList<Light> &container<Light>() { return lights_; }
-	template <>
-	QList<Distortion> &container<Distortion>() { return distortions_; }
-#endif
-
 	Surface surface_;
-	QList<Light> lights_;
-	QList<Distortion> distortions_;
-	QVector<uint> binded_light_indexes_;
-	QVector<uint> binded_distortion_indexes_;
+
+	QHash<quint64, Light> lights_;
+	QHash<quint64, Distortion> distortions_;
+	QHash<quint64, Cluster*> clusters_;
+	QList<Animator> animators_;
+
+	quint64 index_;
+
 	bool locked_updates_;
 	mutable bool processed_;
 

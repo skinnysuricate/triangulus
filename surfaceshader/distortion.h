@@ -5,14 +5,15 @@
 #include <QtGui/QVector3D>
 
 class Mesh;
+class Cluster;
 
 class Distortion
 {
 public:
-	Distortion(const QVector3D &v = {});
+	Distortion(const QVector3D &v = {}, Cluster *cluster = nullptr);
 	~Distortion();
 
-	const QVector3D &position() const { return v_; }
+	QVector3D position() const;
 	void setPosition(const QVector3D &v);
 
 	/**
@@ -22,6 +23,7 @@ public:
 
 private:
 	QVector3D v_;
+	Cluster *cluster_;
 };
 
 #endif // DISTORTION_H

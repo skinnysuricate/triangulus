@@ -9,9 +9,11 @@
 ShaderScene::ShaderScene(const QSize &s, const Material &m, qreal density, QObject *parent)
 	: QObject(parent)
 	, surface_(s, m , density)
+	, index_(0)
 	, locked_updates_(false)
 	, processed_(false)
 {
+#ifdef TODO
 	animator_.reset(new QVariantAnimation);
 	animator_->setStartValue(0.);
 	animator_->setEndValue(1.);
@@ -47,6 +49,7 @@ ShaderScene::ShaderScene(const QSize &s, const Material &m, qreal density, QObje
 		invalidate();
 	});
 	animator_->start();
+#endif
 }
 
 ShaderScene::~ShaderScene()
@@ -63,32 +66,50 @@ void ShaderScene::endBuildScene()
 	invalidate();
 }
 
-ShaderScene &ShaderScene::add(const Light &l, bool mouse_binded)
+quint64 ShaderScene::add(const Light &l)
 {
-	lights_.append(l);
-	if (mouse_binded)
-		binded_light_indexes_.append(lights_.count() - 1);
+	++index_;
+	lights_.insert(index_, l);
 	if (!locked_updates_)
 		invalidate();
-	return *this;
+	return index_;
 }
 
-ShaderScene &ShaderScene::add(const Distortion &d, bool mouse_binded)
+quint64 ShaderScene::add(const Distortion &d)
 {
-	distortions_.append(d);
-	if (mouse_binded)
-		binded_distortion_indexes_.append(distortions_.count() - 1);
+	++index_;
+	distortions_.insert(index_, d);
 	if (!locked_updates_)
 		invalidate();
-	return *this;
+	return index_;
 }
 
-ShaderScene &ShaderScene::add(Surface s)
+quint64 ShaderScene::add(std::unique_ptr<Cluster> cluster)
+{
+	++index_;
+	clusters_.insert(index_, cluster.get());
+	cluster.release();
+	if (!locked_updates_)
+		invalidate();
+	return index_;
+}
+
+void ShaderScene::add(Surface s)
 {
 	surface_ = std::move(s);
 	if (!locked_updates_)
 		invalidate();
-	return *this;
+}
+
+void ShaderScene::move(quint64 id, const QPoint &pos)
+{
+	if (!clusters_.contains(id))
+		return;
+
+	clusters_.value(id)->setPosition(QVector3D(pos.x(), pos.y(), 0));
+
+	if (!locked_updates_)
+		invalidate();
 }
 
 void ShaderScene::render(QPaintDevice *context) const
@@ -96,6 +117,8 @@ void ShaderScene::render(QPaintDevice *context) const
 	Q_ASSERT_X(!locked_updates_, Q_FUNC_INFO, "Called rendering while is being built. Abort.");
 	if (locked_updates_)
 		return;
+
+//	qDebug() << __FUNCTION__ << processed_;
 
 	if (!processed_)
 		process();
@@ -144,31 +167,6 @@ void ShaderScene::render(QPaintDevice *context) const
 		}
 	}
 #endif
-}
-
-void ShaderScene::handleMouseMove(const QPoint &pos)
-{
-	if (binded_distortion_indexes_.isEmpty() && binded_light_indexes_.isEmpty())
-		return;
-
-	animator_pos_.setX(pos.x());
-	animator_pos_.setY(pos.y());
-
-//	for (uint idx: binded_distortion_indexes_) {
-//		QVector3D v = distortions_.at(idx).position();
-//		v.setX(pos.x());
-//		v.setY(pos.y());
-//		distortions_[idx].setPosition(v);
-//	}
-
-//	for (uint idx: binded_light_indexes_) {
-//		QVector3D v = lights_.at(idx).position();
-//		v.setX(pos.x());
-//		v.setY(pos.y());
-//		lights_[idx].setPosition(v);
-//	}
-
-//	invalidate();
 }
 
 void ShaderScene::invalidate()

@@ -4,13 +4,15 @@
 #include <QtGui/QColor>
 #include <QtGui/QVector3D>
 
+class Cluster;
+
 class Light
 {
 public:
-	Light(const QVector3D &v, const QColor &diffuse, const QColor &ambient, qreal decay = 0.);
+	Light(const QVector3D &v, const QColor &diffuse, const QColor &ambient, qreal decay, Cluster *cluster = nullptr);
 	~Light();
 
-	const QVector3D &position() const { return v_; }
+	QVector3D position() const;
 	const QColor &diffuse() const { return clr_diffuse_; }
 	const QColor &ambient() const { return clr_ambient_; }
 	qreal fading() const { return fading_; }
@@ -27,6 +29,7 @@ private:
 	QColor clr_ambient_;
 	qreal fading_;				// brightness decay per 100px of distance,
 								// e.g. 0.05 of 1. per 100px
+	Cluster *cluster_;
 };
 
 #endif // LIGHT_H

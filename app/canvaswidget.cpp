@@ -23,7 +23,10 @@ void CanvasWidget::paintEvent(QPaintEvent *e)
 
 void CanvasWidget::mouseMoveEvent(QMouseEvent *e)
 {
-	scene_->handleMouseMove(e->pos());
+	scene_->beginBuildScene();
+	for (const quint64 &id: binded_ids_)
+		scene_->move(id, e->pos());
+	scene_->endBuildScene();
 	e->accept();
 }
 
@@ -32,15 +35,23 @@ void CanvasWidget::mousePressEvent(QMouseEvent *e)
 	e->accept();
 }
 
+void CanvasWidget::resizeEvent(QResizeEvent *e)
+{
+	QWidget::resizeEvent(e);
+	buildDefaultScene();//BlueScene();
+}
+
 void CanvasWidget::buildDefaultScene()
 {
 	Material m (QColor("#555555"), QColor("#444444"));
-	scene_.reset(new ShaderScene(QSize(500, 500), m, 5.));
+	scene_.reset(new ShaderScene(QSize(width(), height()), m, 5.));
 	scene_->beginBuildScene();
-	scene_->add(Light(QVector3D(200, 100, 100), "#FFDDC2", "#333", 0.02), true)
-			.add(Light(QVector3D(50, 150, 400), "#4400EE", "#555", 0.07), true)
-			.add(Light(QVector3D(50, 150, 50), "#EEEE00", "#444", 0.01), true)
-			.add(Distortion(), true);
+	std::unique_ptr<Cluster> cluster (new Cluster);
+	*cluster << scene_->add(Light(QVector3D(0, 0, 100), "#FFDDC2", "#333", 0.02, cluster.get()))
+			<< scene_->add(Light(QVector3D(0, 0, 400), "#4400EE", "#555", 0.07, cluster.get()))
+			<< scene_->add(Light(QVector3D(0, 0, 50), "#EEEE00", "#444", 0.01, cluster.get()))
+			<< scene_->add(Distortion(QVector3D(), cluster.get()));
+	binded_ids_ << scene_->add(std::move(cluster));
 	scene_->endBuildScene();
 	connect(scene_.get(), SIGNAL(invalidated()), this, SLOT(update()));
 }
@@ -48,13 +59,15 @@ void CanvasWidget::buildDefaultScene()
 void CanvasWidget::buildBlueScene()
 {
 	Material m (QColor("#2E5A86"), QColor("#335f8a"));
-	scene_.reset(new ShaderScene(QSize(500, 500), m, 5.));
+	scene_.reset(new ShaderScene(QSize(width(), height()), m, 5.));
 	scene_->beginBuildScene();
-	scene_->add(Light(QVector3D(200, 100, 50), "#fff", "#333", 0.02), true)
-			.add(Light(QVector3D(50, 150, 200), "#808080", "#555", 0.01), true)
-			.add(Light(QVector3D(50, 150, 25), "#C4E2FF", "#444", 0.001), true)
-			.add(Distortion(), true)
-			;
+
+	std::unique_ptr<Cluster> cluster (new Cluster);
+	*cluster << scene_->add(Light(QVector3D(0, 0, 100), "#FFF", "#333", 0.02, cluster.get()))
+			<< scene_->add(Light(QVector3D(0, 0, 200), "#808080", "#777", 0.01, cluster.get()))
+			<< scene_->add(Light(QVector3D(0, 0, 50), "#CCC", "#444", 0.005, cluster.get()))
+			<< scene_->add(Distortion(QVector3D(), cluster.get()));
+	binded_ids_ << scene_->add(std::move(cluster));
 	scene_->endBuildScene();
 	connect(scene_.get(), SIGNAL(invalidated()), this, SLOT(update()));
 }

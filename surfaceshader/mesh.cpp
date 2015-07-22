@@ -52,7 +52,7 @@ void Mesh::generateVertexes(const QRect &area, qreal /*density*/)
 	const quint32 min_distance = 20;
 	const quint32 square = area.width() * area.height();
 	const quint32 max_v_count = square / (min_distance * min_distance);
-	const quint32 v_count = qMin(quint32(300), max_v_count);
+	const quint32 v_count = qMin(quint32(70), max_v_count);
 
 	auto isSuitable = [this, &min_distance] (const QVector3D &p) {
 		for (QVector3D *existant: vertexes_) {
@@ -65,7 +65,7 @@ void Mesh::generateVertexes(const QRect &area, qreal /*density*/)
 	for (uint i = 0; i < v_count; ++i) {
 		QVector3D new_p (area.width() * (qrand() % 1001 / 1000.),
 						 area.height() * (qrand() % 1001 / 1000.),
-						 qrand() % 1001 * 0.001 * 2.1);
+						 qrand() % 1001 * 0.001 * 4.1);
 		if (!isSuitable(new_p)) {
 			--i;
 			continue;

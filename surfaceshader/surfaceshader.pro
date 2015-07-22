@@ -14,7 +14,9 @@ SOURCES += \
 	distortion.cpp \
 	mesh.cpp \
 	shaderscene.cpp \
-	triangle.cpp
+	triangle.cpp \
+	cluster.cpp \
+	animator.cpp
 
 HEADERS += \
 	triangulator.h \
@@ -24,7 +26,9 @@ HEADERS += \
 	distortion.h \
 	mesh.h \
 	shaderscene.h \
-	triangle.h
+	triangle.h \
+	cluster.h \
+	animator.h
 
 DESTDIR = ../lib
 OBJECTS_DIR = ../.obj

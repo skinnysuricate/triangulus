@@ -17,12 +17,14 @@ protected:
 	void paintEvent(QPaintEvent *e) override;
 	void mouseMoveEvent(QMouseEvent *e) override;
 	void mousePressEvent(QMouseEvent *e) override;
+	void resizeEvent(QResizeEvent *e) override;
 
 private:
 	void buildDefaultScene();
 	void buildBlueScene();
 
 	std::unique_ptr<ShaderScene> scene_;
+	QList<quint64> binded_ids_;
 };
 
 #endif // CANVASWIDGET_H
