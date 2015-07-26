@@ -4,7 +4,7 @@
 
 Surface::Surface(const QSize &size, const Material &material, qreal mesh_density)
 	: size_(size)
-	, mesh_(coveringRect(size), mesh_density)
+	, mesh_(QRect(), mesh_density)
 	, material_(material)
 {}
 
@@ -25,10 +25,16 @@ Surface &Surface::operator=(Surface &&other)
 	return *this;
 }
 
+void Surface::adjustSize(const QSize &s)
+{
+	mesh_.adjust(coveringRect(s));
+	size_ = s;
+}
+
 QRect Surface::coveringRect(const QSize &size)
 {
-	const qreal x_margin = 0.05 * size.width();
-	const qreal y_margin = 0.05 * size.height();
+	const qreal x_margin = 50;
+	const qreal y_margin = 50;
 	return QRect({0, 0}, size).adjusted(-x_margin, -y_margin,
 										x_margin, y_margin);
 }

@@ -26,18 +26,15 @@ public:
 	~ShaderScene();
 
 	QSize size() const { return surface_.size(); }
-
 	void beginBuildScene();
 	void endBuildScene();
-
 	quint64 add(const Light &l);
 	quint64 add(const Distortion &d);
 	quint64 add(std::unique_ptr<Cluster> cluster);
 	void add(Surface s);
-
 	void move(quint64 id, const QPoint &pos);
-
 	void render(QPaintDevice *context) const;
+	void adjustSize(const QSize &s);
 
 signals:
 	void invalidated();

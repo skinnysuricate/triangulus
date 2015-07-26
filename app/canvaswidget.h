@@ -22,6 +22,7 @@ protected:
 private:
 	void buildDefaultScene();
 	void buildBlueScene();
+	void buildWierdScene();
 
 	std::unique_ptr<ShaderScene> scene_;
 	QList<quint64> binded_ids_;

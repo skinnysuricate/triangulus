@@ -169,6 +169,12 @@ void ShaderScene::render(QPaintDevice *context) const
 #endif
 }
 
+void ShaderScene::adjustSize(const QSize &s)
+{
+	surface_.adjustSize(s);
+	invalidate();
+}
+
 void ShaderScene::invalidate()
 {
 	processed_ = false;

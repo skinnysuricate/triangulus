@@ -9,7 +9,7 @@ CanvasWidget::CanvasWidget(QWidget *parent)
 	: QWidget(parent)
 {
 	setMouseTracking(true);
-	buildBlueScene();
+	buildWierdScene();
 }
 
 CanvasWidget::~CanvasWidget()
@@ -38,7 +38,7 @@ void CanvasWidget::mousePressEvent(QMouseEvent *e)
 void CanvasWidget::resizeEvent(QResizeEvent *e)
 {
 	QWidget::resizeEvent(e);
-	buildDefaultScene();//BlueScene();
+	scene_->adjustSize(e->size());
 }
 
 void CanvasWidget::buildDefaultScene()
@@ -67,6 +67,22 @@ void CanvasWidget::buildBlueScene()
 			<< scene_->add(Light(QVector3D(0, 0, 200), "#808080", "#777", 0.01, cluster.get()))
 			<< scene_->add(Light(QVector3D(0, 0, 50), "#CCC", "#444", 0.005, cluster.get()))
 			<< scene_->add(Distortion(QVector3D(), cluster.get()));
+	binded_ids_ << scene_->add(std::move(cluster));
+	scene_->endBuildScene();
+	connect(scene_.get(), SIGNAL(invalidated()), this, SLOT(update()));
+}
+
+void CanvasWidget::buildWierdScene()
+{
+	Material m (QColor("#777"), QColor("#333"));
+	scene_.reset(new ShaderScene(QSize(width(), height()), m, 5.));
+	scene_->beginBuildScene();
+
+	std::unique_ptr<Cluster> cluster (new Cluster);
+	*cluster << scene_->add(Light(QVector3D(0, -40, 50), "#ff0000", "#777", 0.00001, cluster.get()))
+			 << scene_->add(Light(QVector3D(-40, 40, 50), "#00dd00", "#777", 0.00001, cluster.get()))
+			 << scene_->add(Light(QVector3D(40, 40, 50), "#0000ff", "#777", 0.00001, cluster.get()))
+			 << scene_->add(Distortion(QVector3D(), cluster.get()));
 	binded_ids_ << scene_->add(std::move(cluster));
 	scene_->endBuildScene();
 	connect(scene_.get(), SIGNAL(invalidated()), this, SLOT(update()));
