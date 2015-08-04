@@ -1,7 +1,10 @@
 #include "mesh.h"
 
 #include <utility>
+#include <QtCore/QDebug>
 #include <QtCore/QDateTime>
+#include <QtCore/QHash>
+#include <QtCore/QVector>
 #include <QtGui/QVector3D>
 #include "triangulator.h"
 
@@ -44,10 +47,10 @@ void Mesh::adjust(const QRect &area)
 	polygons_.clear();
 
 	// check sides
-	const bool adjust_left = area.left() != rect_.left();
-	const bool adjust_top = area.top() != rect_.top();
-	const bool adjust_right = area.right() != rect_.right();
-	const bool adjust_bottom = area.bottom() != rect_.bottom();
+	const bool adjust_left =	true;//area.left() != rect_.left();
+	const bool adjust_top =		true;//area.top() != rect_.top();
+	const bool adjust_right =	true;//area.right() != rect_.right();
+	const bool adjust_bottom =	true;//area.bottom() != rect_.bottom();
 
 	// remove vertexes beyond the area or on prev area bound
 	for (auto it = vertexes_.begin(); it != vertexes_.end();) {
@@ -62,6 +65,9 @@ void Mesh::adjust(const QRect &area)
 		}
 		++it;
 	}
+
+	// generate vertexes
+	generateVertexesVoronoi(area);
 
 	// add border vertexes, if where removed
 	qsrand(uint(&area) + uint(QDateTime::currentMSecsSinceEpoch()));
@@ -84,9 +90,6 @@ void Mesh::adjust(const QRect &area)
 	if (adjust_bottom)
 		for (int i = area.left(); i < area.right(); i+=60+randomOffset(20))
 			vertexes_ << new QVector3D(qreal(i), area.bottom(), qrand() % 1001 * 0.001 * 4.1);
-
-	// generate vertexes
-	generateVertexes(area);
 
 	rect_ = area;
 
@@ -120,7 +123,7 @@ void Mesh::generateVertexes(const QRect &area)
 	const quint32 min_distance = 20;
 	const quint32 square = area.width() * area.height();
 	const quint32 max_v_count = square / (min_distance * min_distance);
-	const qint32 v_count = qMin(quint32(70), max_v_count) - vertexes_.size();
+	const qint32 v_count = qMin(quint32(270), max_v_count) - vertexes_.size();
 
 	// current vertexes size >= v_count, no need to generate
 	if (v_count <= 0)
@@ -144,6 +147,65 @@ void Mesh::generateVertexes(const QRect &area)
 		}
 		vertexes_ << new QVector3D(new_p);
 	}
+}
+
+void Mesh::generateVertexesVoronoi(const QRect &area)
+{
+	qsrand(uint(QDateTime::currentMSecsSinceEpoch()));
+
+	int point_count = density_ * (area.width() / 100.) * (area.height() / 100.) - vertexes_.size();
+
+	for (int i = 0; i < point_count; ++i)
+		vertexes_.append(new QVector3D(area.left() + area.width() * (qrand() % 1001 / 1000.),
+									   area.top() + area.height() * (qrand() % 1001 / 1000.),
+									   qrand() % 1001 * 0.001 * 4.));
+
+	point_count = vertexes_.size();
+
+	QList<QPoint> density_points;
+	for (int i = 0; i < point_count * 100; ++i) {
+		density_points << QPoint(area.left() + area.width() * (qrand() % 1001 / 1000.),
+								 area.top() + area.height() * (qrand() % 1001 / 1000.));
+	}
+
+	for (int n = 0; n < 5; ++n) {
+		// 30 iterations
+		QHash<QVector3D*, QVector<QPoint>> clusters;
+		for (int i = 0; i < density_points.size(); ++i) {
+			const QPoint p (density_points.at(i));
+			QVector3D *closest = vertexes_.first();
+			for (int j = 1; j < point_count; ++j) {
+				QVector3D *v = vertexes_.at(j);
+				const quint32 curr_dist = qAbs((closest->x() - p.x()) * (closest->y() - p.y()));
+				const quint32 dist = qAbs((v->x() - p.x()) * (v->y() - p.y()));
+				if (dist < curr_dist) closest = v;
+			}
+			clusters[closest].append(p);
+		}
+
+		for (int i = 0; i < point_count; ++i) {
+			QVector3D *v = vertexes_.at(i);
+			QVector<QPoint> points (clusters.value(v));
+			if (points.empty())
+				continue;
+
+			QPoint centroid;
+			for (const QPoint &p: points)
+				centroid += p;
+			centroid = centroid / points.size();
+			v->setX(centroid.x());
+			v->setY(centroid.y());
+		}
+	}
+
+	for (int i = 0; i < vertexes_.size(); ++i)
+		for (int j = i + 1; j < vertexes_.size() - 1; ++j) {
+			if ((*vertexes_.at(i) - *vertexes_.at(j)).toPointF().manhattanLength() < 20) {
+				delete vertexes_.at(j);
+				vertexes_.removeAt(j);
+				--j;
+			}
+		}
 }
 
 void Mesh::clearVertexes()

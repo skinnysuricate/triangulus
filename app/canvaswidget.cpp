@@ -9,7 +9,7 @@ CanvasWidget::CanvasWidget(QWidget *parent)
 	: QWidget(parent)
 {
 	setMouseTracking(true);
-	buildWierdScene();
+	buildBlueScene();
 }
 
 CanvasWidget::~CanvasWidget()
@@ -59,7 +59,7 @@ void CanvasWidget::buildDefaultScene()
 void CanvasWidget::buildBlueScene()
 {
 	Material m (QColor("#2E5A86"), QColor("#335f8a"));
-	scene_.reset(new ShaderScene(QSize(width(), height()), m, 5.));
+	scene_.reset(new ShaderScene(QSize(width(), height()), m, 1.));
 	scene_->beginBuildScene();
 
 	std::unique_ptr<Cluster> cluster (new Cluster);

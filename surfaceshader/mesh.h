@@ -26,6 +26,7 @@ private:
 
 	void generateBoundVertexes(const QRect &area);
 	void generateVertexes(const QRect &area);
+	void generateVertexesVoronoi(const QRect &area);
 	void clearVertexes();
 
 	/**
