@@ -24,9 +24,16 @@ public:
 
 private:
 
+#ifdef UNUSED
 	void generateBoundVertexes(const QRect &area);
-	void generateVertexes(const QRect &area);
-	void generateVertexesVoronoi(const QRect &area);
+#endif
+
+	QList<QVector3D*> generateVertexesVoronoi(const QRect &area, qreal density) const;
+	QList<QVector3D*> generateVertexes(const QRect &area, uint count) const;
+	QList<QPoint> generateDensityPoints(const QRect &area, uint count) const;
+	void performCentroidalTesselation(const QList<QPoint> &density_points, QList<QVector3D*> &vertexes, uint iterations) const;
+	void completeVertexes(QVector<QRect> cells);
+	void fix(const QRect &area);
 	void clearVertexes();
 
 	/**

@@ -58,14 +58,14 @@ void CanvasWidget::buildDefaultScene()
 
 void CanvasWidget::buildBlueScene()
 {
-	Material m (QColor("#2E5A86"), QColor("#335f8a"));
-	scene_.reset(new ShaderScene(QSize(width(), height()), m, 1.));
+	Material m (QColor("#3f607f"), QColor("#4580b8"));
+	scene_.reset(new ShaderScene(QSize(width(), height()), m, 0.09));
 	scene_->beginBuildScene();
 
 	std::unique_ptr<Cluster> cluster (new Cluster);
-	*cluster << scene_->add(Light(QVector3D(0, 0, 100), "#FFF", "#333", 0.02, cluster.get()))
-			<< scene_->add(Light(QVector3D(0, 0, 200), "#808080", "#777", 0.01, cluster.get()))
-			<< scene_->add(Light(QVector3D(0, 0, 50), "#CCC", "#444", 0.005, cluster.get()))
+	*cluster << scene_->add(Light(QVector3D(0, 0, 100), "#ffffff", "#333", 0.02, cluster.get()))
+			<< scene_->add(Light(QVector3D(0, 0, 250), "#808080", "#777", 0.001, cluster.get()))
+			<< scene_->add(Light(QVector3D(0, 0, 50), "#cecece", "#444", 0.005, cluster.get()))
 			<< scene_->add(Distortion(QVector3D(), cluster.get()));
 	binded_ids_ << scene_->add(std::move(cluster));
 	scene_->endBuildScene();
